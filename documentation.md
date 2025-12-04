@@ -1,15 +1,23 @@
-
 # HTTP, DNS, IPs & Network
 
 #### HTTP
+
 - `The protocol browsers use to communicate with servers using requests and responses.`
+
 #### DNS
+
 - `Converts human-friendly domain names (e.g., google.com) into IP addresses.`
+
 #### IP
+
 - `A unique address identifying a server or device on the internet.`
+
 #### Ports
+
 - `Channels on a machine where services run (e.g., port 80 for HTTP).`
+
 #### Client/Server model
+
 - `Client sends request → server processes → sends response.`
 
 <!-- -------------------------------------------------------------- -->
@@ -21,14 +29,23 @@
 - `Backend developers build APIs so frontend apps, mobile apps, or third-party services can interact with their server.`
 
 #### REST API
+
 - `Use URLs and HTTP verbs (GET, POST, PUT, DELETE).`
+
 #### GraphQL
+
 - `Flexible queries where clients request exactly the data they need.`
+
 #### gRPC
+
 - `Fast, binary communication used in microservices.`
+
 #### Webhooks
+
 - `Server-to-server push notifications.`
+
 #### WebSocket API
+
 - `Real-time communication (e.g., chat apps).`
 
 <!-- -------------------------------------------------------------- -->
@@ -50,10 +67,12 @@
 # Database
 
 #### SQL
+
 - `MySQL`
 - `PostgreSQL`
 
 #### NoSQL
+
 - `MongoDB`
 - `Firebase`
 - `DynamoDB`
@@ -63,14 +82,17 @@
 # Backend Architecture
 
 #### Monolithic Architecture
+
 - `A monolith is when your entire application’s backend is one big project, deployed as one unit.`
 
 #### Microservices Architecture
+
 - `A system split into independent small services, each responsible for one function.`
 
 <!-- -------------------------------------------------------------- -->
 
 # Express
+
 - `npm init -y`
 - `npm i express`
 - `npm i --save-dev nodemon`
@@ -78,6 +100,7 @@
 - `touch .gitignore`
 
 #### ES Module
+
 ```
 package.json
   {
@@ -89,13 +112,14 @@ package.json
     "scripts": {
         "start": "node app.js",
         "dev": "nodemon app.js"
-    },    
+    },
   }
 ```
 
 <!-- -------------------------------------------------------------- -->
 
 # Express Server
+
 ```
 app.js
     import express from "express";
@@ -119,8 +143,11 @@ app.js
 <!-- -------------------------------------------------------------- -->
 
 # Config
+
 #### Environment Variable
+
 - `npm i dotenv`
+
 ```
 config\env.js
     import { config } from "dotenv";
@@ -130,10 +157,13 @@ config\env.js
     export const { PORT, NODE_ENV } = process.env;
 -----------------------------------------------------------------------
 .env.production.local
-    # DOTE_ENV
-    DOTE_ENV='production'
+    # NODE_ENV
+    NODE_ENV='production'
 -----------------------------------------------------------------------
 .env.development.local
+    # NODE_ENV
+    NODE_ENV='development'
+
     # PORT
     PORT=5500
 -----------------------------------------------------------------------
@@ -165,7 +195,9 @@ app.js
 <!-- -------------------------------------------------------------- -->
 
 # Routes
+
 #### Naming Convention
+
 - `https://restfulapi.net/resource-naming/`
 
 ```
@@ -265,9 +297,96 @@ app.js
 
     export default app;
 ```
+
 <!-- -------------------------------------------------------------- -->
 
 # MongoDB
+
+#### Local
+
+- `https://www.mongodb.com/`
+
+#### Cloud
+
+- `https://www.mongodb.com/products/platform/atlas-database`
+
+#### MongoDB
+
+- `npm i mongodb`
+
+#### ORM
+
+- `npm i mongoose`
+
+```
+database\mongodb.js
+    import mongoose from "mongoose";
+    import { DB_URI, NODE_ENV } from "../config/env.js";
+
+    if (!DB_URI) {
+    throw new Error(
+        "Please define the MONGODB_URI environment variable inside .env.<development/production>.local"
+    );
+    }
+
+    const connectToDatabase = async () => {
+    try {
+        await mongoose.connect(DB_URI);
+        console.log(`Connected to database in ${NODE_ENV}`);
+    } catch (error) {
+        console.error(`Error connecting to the database, ${error}`);
+
+        process.exit(1);
+    }
+    };
+
+    export default connectToDatabase;
+-----------------------------------------------------------------------
+app.js
+    import express from "express";
+    import { PORT } from "./config/env.js";
+    import authRouter from "./routes/auth.routes.js";
+    import userRouter from "./routes/user.routes.js";
+    import subscriptionRouter from "./routes/subscription.routes.js";
+    import connectToDatabase from "./database/mongodb.js";
+
+    const app = express();
+
+    app.get("/", (req, res) => {
+    res.send("Welcome To The Subscription Tracker API");
+    });
+
+    app.listen(PORT, async () => {
+    console.log(
+        `The Subscription Tracker API running on http://localhost:${PORT}`
+    );
+
+    await connectToDatabase();
+    });
+
+    app.use("/api/v1/auth", authRouter);
+    app.use("/api/v1/users", userRouter);
+    app.use("/api/v1/subscriptions", subscriptionRouter);
+
+    export default app;
+-----------------------------------------------------------------------
+.env.development.local
+    # NODE_ENV
+    NODE_ENV='development'
+
+    # PORT
+    PORT=5500
+
+    # MONGODB
+    DB_URI='mongodb+srv://mrullldhm:1457@cluster0.mq25jil.mongodb.net/?appName=Cluster0'
+-----------------------------------------------------------------------
+config\env.js
+    import { config } from "dotenv";
+
+    config({ path: `.env.${process.env.NODE_ENV || "development"}.local` });
+
+    export const { PORT, NODE_ENV, DB_URI } = process.env;
+```
 
 <!-- -------------------------------------------------------------- -->
 
