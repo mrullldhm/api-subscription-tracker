@@ -1,4 +1,4 @@
-const errorMiddleware = (err, req, res) => {
+const errorMiddleware = (err, req, res, next) => {
   try {
     let error = { ...err };
     error.message = err.message;
@@ -20,9 +20,7 @@ const errorMiddleware = (err, req, res) => {
 
     // Mongoose validation error
     if (err.code === "ValidationError") {
-      const message = Object.values(err.errors).map((val) => {
-        val.message;
-      });
+      const message = Object.values(err.errors).map((val) => val.message);
       error = new Error(message.join(", "));
       error.statuscode = 400;
     }
