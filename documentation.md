@@ -165,8 +165,105 @@ app.js
 <!-- -------------------------------------------------------------- -->
 
 # Routes
-```
+#### Naming Convention
+- `https://restfulapi.net/resource-naming/`
 
+```
+routes\auth.routes.js
+    import { Router } from "express";
+
+    const authRouter = Router();
+
+    authRouter.post("/sign-up", (req, res) => {
+    res.send({ title: "Sign up" });
+    });
+
+    authRouter.post("/sign-in", (req, res) => {
+    res.send({ title: "Sign in" });
+    });
+
+    authRouter.post("/sign-out", (req, res) => {
+    res.send({ title: "Sign out" });
+    });
+
+    export default authRouter
+-----------------------------------------------------------------------
+routes\user.routes.js
+    import { Router } from "express";
+
+    const userRouter = Router();
+
+    userRouter.get("/", (req, res) => {
+    res.send({ title: "READ all users details" });
+    });
+
+    userRouter.get("/:id", (req, res) => {
+    res.send({ title: "READ users details" });
+    });
+
+    userRouter.post("/", (req, res) => {
+    res.send({ title: "CREATE users details" });
+    });
+
+    userRouter.put("/:id", (req, res) => {
+    res.send({ title: "UPDATE users details" });
+    });
+
+    userRouter.delete("/:id", (req, res) => {
+    res.send({ title: "DELETE users details" });
+    });
+
+    export default userRouter;
+-----------------------------------------------------------------------
+routes\subscription.routes.js
+    import express from "express";
+    import { PORT } from "./config/env.js";
+    import authRouter from "./routes/auth.routes.js";
+    import userRouter from "./routes/user.routes.js";
+    import subscriptionRouter from "./routes/subscription.routes.js";
+
+    const app = express();
+
+    app.get("/", (req, res) => {
+    res.send("Welcome To The Subscription Tracker API");
+    });
+
+    app.listen(PORT, () => {
+    console.log(
+        `The Subscription Tracker API running on http://localhost:${PORT}`
+    );
+    });
+
+    app.use("/api/v1/auth", authRouter);
+    app.use("/api/v1/users", userRouter);
+    app.use("/api/v1/subscriptions", subscriptionRouter);
+
+    export default app;
+-----------------------------------------------------------------------
+app.js
+    import express from "express";
+    import { PORT } from "./config/env.js";
+    import authRouter from "./routes/auth.routes.js";
+    import userRouter from "./routes/user.routes.js";
+    import subscriptionRouter from "./routes/subscription.routes.js";
+
+    const app = express();
+
+    app.get("/", (req, res) => {
+    res.send("Welcome To The Subscription Tracker API");
+    });
+
+    app.listen(PORT, () => {
+    console.log(
+        `The Subscription Tracker API running on http://localhost:${PORT}`
+    );
+    });
+
+    app.use("/api/v1/auth", authRouter);
+    app.use("/api/v1/users", userRouter);
+    app.use("/api/v1/subscriptions", subscriptionRouter);
+
+    export default app;
 ```
 <!-- -------------------------------------------------------------- -->
 
