@@ -119,11 +119,55 @@ app.js
 <!-- -------------------------------------------------------------- -->
 
 # Config
+#### Environment Variable
+- `npm i dotenv`
+```
+config\env.js
+    import { config } from "dotenv";
+
+    config({ path: `.env.${process.env.NODE_ENV || "development"}.local` });
+
+    export const { PORT, NODE_ENV } = process.env;
+-----------------------------------------------------------------------
+.env.production.local
+    # DOTE_ENV
+    DOTE_ENV='production'
+-----------------------------------------------------------------------
+.env.development.local
+    # PORT
+    PORT=5500
+-----------------------------------------------------------------------
+.gitignore
+    node_modules/
+    .env
+    .env.*.local
+    dist/
+-----------------------------------------------------------------------
+app.js
+    import express from "express";
+    import { PORT } from "./config/env.js";
+
+    const app = express();
+
+    app.get("/", (req, res) => {
+    res.send("Welcome To The Subscription Tracker API");
+    });
+
+    app.listen(PORT, () => {
+    console.log(
+        `The Subscription Tracker API running on http://localhost:${PORT}`
+    );
+    });
+
+    export default app
+```
 
 <!-- -------------------------------------------------------------- -->
 
 # Routes
+```
 
+```
 <!-- -------------------------------------------------------------- -->
 
 # MongoDB
