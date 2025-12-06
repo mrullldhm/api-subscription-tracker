@@ -1144,9 +1144,9 @@ controllers\workflow.controller.js
     import dayjs from "dayjs";
     import sendReminderEmail from "../utils/send-email.js";
 
+    import { createRequire } from "module";
     const require = createRequire(import.meta.url);
     const { serve } = require("@upstash/workflow/express");
-    import { createRequire } from "module";
 
     const REMINDERS = [7, 5, 2, 1];
 
@@ -1314,6 +1314,12 @@ app.js
 <!-- -------------------------------------------------------------- -->
 
 # Send Emails
+
+#### Nodemailer
+
+- `Nodemailer is a popular Node.js library used to send emails from a server or application. I`
+- `Used in backend projects to automate email sending, like account verification emails, password resets, notifications, or newsletters.`
+- `npm i nodemailer`
 
 ```
 -----------------------------------------------------------------------
