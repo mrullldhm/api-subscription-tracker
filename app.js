@@ -6,7 +6,7 @@ import userRouter from "./routes/user.routes.js";
 import subscriptionRouter from "./routes/subscription.routes.js";
 import connectToDatabase from "./database/mongodb.js";
 import errorMiddleware from "./middleware/error.middleware.js";
-import arcjetMiddleware from "./middleware/arcjet.middleware.js";
+// import arcjetMiddleware from "./middleware/arcjet.middleware.js";
 
 const app = express();
 
@@ -15,7 +15,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 // Arcjet Middleware
-app.use(arcjetMiddleware);
+// app.use(arcjetMiddleware);
 
 app.get("/", (req, res) => {
   res.send("Welcome To The Subscription Tracker API");

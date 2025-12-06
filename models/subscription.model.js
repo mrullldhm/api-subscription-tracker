@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import User from "./user.model";
+// import User from "./user.model.js";
 
 const subscriptionSchema = new mongoose.Schema(
   {
@@ -12,7 +12,7 @@ const subscriptionSchema = new mongoose.Schema(
     },
     price: {
       type: Number,
-      require: [true, "Subscription price is required"],
+      required: [true, "Subscription price is required"],
       min: [0, "Price must be greater than 0"],
       max: [1000, "Price must be greater than 1000"],
     },
@@ -67,7 +67,7 @@ const subscriptionSchema = new mongoose.Schema(
     },
     user: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: User,
+      ref: "user",
       required: true,
       index: true,
     },
@@ -77,7 +77,7 @@ const subscriptionSchema = new mongoose.Schema(
 );
 
 // Auto calculate renewal date if missing
-subscriptionSchema.pre("save", function (next) {
+subscriptionSchema.pre("save", function () {
   if (!this.renewalDate) {
     const renewalPeriods = {
       daily: 1,
@@ -87,7 +87,7 @@ subscriptionSchema.pre("save", function (next) {
     };
 
     this.renewalDate = new Date(this.startDate);
-    this.renewalDate.setDatet(
+    this.renewalDate.setDate(
       this.renewalDate.getDate() + renewalPeriods[this.frequency]
     );
   }
@@ -97,7 +97,6 @@ subscriptionSchema.pre("save", function (next) {
     this.status = "expired";
   }
 
-  next();
 });
 
 const Subscription = mongoose.model("Subscription", subscriptionSchema);

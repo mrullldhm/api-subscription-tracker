@@ -988,12 +988,81 @@ app.js
 # Subscription
 
 ```
+controllers\subscription.controller.js
+    import Subscription from "../models/subscription.model.js";
+
+    export const createSubscription = async (req, res, next) => {
+    try {
+        const subscription = await Subscription.create({
+        ...req.body,
+        user: req.user._id,
+        });
+
+        res.status(201).json({ success: true, data: subscription });
+    } catch (error) {
+        next(error);
+    }
+    };
+
+    export const getUserSubscription = async (req, res, next) => {
+    try {
+        if (req.user.id !== req.params.id) {
+        const error = new Error("You're not the owner of this account");
+        error.status = 401;
+        throw error;
+        }
+
+        const subscription = await Subscription.find({ user: req.params.id });
+
+        res.status(201).json({ success: true, data: subscription });
+    } catch (error) {
+        next(error);
+    }
+    };
+-----------------------------------------------------------------------
+routes\subscription.routes.js
+    import { Router } from "express";
+    import authorize from "../middleware/auth.middleware.js";
+    import { createSubscription, getUserSubscription } from "../controllers/subscription.controller.js";
+
+    const subscriptionRouter = Router();
+
+    subscriptionRouter.get("/", (req, res) => {
+    res.send({ title: "READ all subscriptions" });
+    });
+
+    subscriptionRouter.get("/:id", (req, res) => {
+    res.send({ title: "READ subscriptions" });
+    });
+
+    subscriptionRouter.post("/", authorize, createSubscription);
+
+    subscriptionRouter.put("/:id", (req, res) => {
+    res.send({ title: "UPDATE subscriptions" });
+    });
+
+    subscriptionRouter.delete("/:id", (req, res) => {
+    res.send({ title: "DELETE subscriptions" });
+    });
+
+    subscriptionRouter.get("/users/:id", authorize, getUserSubscription);
+
+    subscriptionRouter.put("/:id/cancel", (req, res) => {
+    res.send({ title: "CANCEL users subscriptions" });
+    });
+
+    subscriptionRouter.get("/upcoming-renewals", (req, res) => {
+    res.send({ title: "READ upcoming renewals" });
+    });
+
+    export default subscriptionRouter;
 -----------------------------------------------------------------------
 ```
 
 <!-- -------------------------------------------------------------- -->
 
 # Reminder Workflow
+- `A workflow is a series of defined actions, tasks, or processes that are executed in a specific order.`
 
 ```
 -----------------------------------------------------------------------
