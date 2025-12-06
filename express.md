@@ -552,7 +552,6 @@ models\subscription.model.js
 - `Middleware is a function in a web framework (like Express) that runs during the request-response cycle.`
 - `Error handler middleware type of middleware that catches errors thrown in routes or other middleware.`
 
-
 - `npm i cookie-parser`
 
 ```
@@ -889,6 +888,7 @@ routes\user.routes.js
 <!-- -------------------------------------------------------------- -->
 
 # Arcjet
+
 - `npm i @arcjet/node @arcjet/inspect`
 
 ```
@@ -914,17 +914,17 @@ config\arcjet.js
     rules: [
         shield({ mode: "LIVE" }),
         detectBot({
-        mode: "LIVE", 
+        mode: "LIVE",
         allow: [
-            "CATEGORY:SEARCH_ENGINE", 
+            "CATEGORY:SEARCH_ENGINE",
         ],
         }),
         tokenBucket({
         mode: "LIVE",
-    
-        refillRate: 5, 
-        interval: 10, 
-        capacity: 10, 
+
+        refillRate: 5,
+        interval: 10,
+        capacity: 10,
         }),
     ],
     });
@@ -1062,10 +1062,253 @@ routes\subscription.routes.js
 <!-- -------------------------------------------------------------- -->
 
 # Reminder Workflow
+
 - `A workflow is a series of defined actions, tasks, or processes that are executed in a specific order.`
 
+#### Upstash Workflow
+
+- `https://upstash.com/`
+- `npm install @upstash/workflow`
+- `npx @upstash/qstash-cli dev`
+
 ```
+config\upstash.js
+    import { client as WorkflowClient } from "@upstash/workflow";
+    import { QSTASH_TOKEN, QSTASH_URL } from "./env";
+
+    export const workflowClient = new WorkflowClient({
+    baseUrl: QSTASH_URL,
+    token: QSTASH_TOKEN,
+    });
 -----------------------------------------------------------------------
+.env.production.local
+    # NODE_ENV
+    NODE_ENV='production'
+
+    # UPSTASH - DASHBOARD
+    QSTASH_URL="https://qstash.upstash.io"
+    QSTASH_TOKEN="eyJVc2VySUQiOiJmNzcwMmIzYi1mNGUyLTRhMzUtODgyMS1iZGM1ODVmZGRkM2MiLCJQYXNzd29yZCI6ImFjZmQ5MjZhZjZjYjRlZTNhODA3MWYxNWFkMGZlMjk5In0="
+    QSTASH_CURRENT_SIGNING_KEY="sig_7PrdVHmwFZga2Cnk1vm3iPGsQaAE"
+    QSTASH_NEXT_SIGNING_KEY="sig_5gadnzZq14LDgrxytAEY4VJVcj5H"
+-----------------------------------------------------------------------
+.env.development.local
+    # NODE_ENV
+    NODE_ENV='development'
+
+    # PORT
+    PORT=5500
+    SERVER_URL=http://localhost:5500
+
+    # MONGODB
+    DB_URI='mongodb+srv://mrullldhm:1457@cluster0.mq25jil.mongodb.net/?appName=Cluster0'
+
+    # JWT AUTH
+    JWT_SECRET='secret'
+    JWT_EXPIRES_IN='1day'
+
+    # ARCJET
+    ARCJECT_KEY=ajkey_01k27bh63vex6aatmpdtv60609
+    ARCJET_ENV=development
+
+    # UPSTASH - npx @upstash/qstash-cli dev
+    QSTASH_URL=http://127.0.0.1:8080
+    QSTASH_TOKEN=eyJVc2VySUQiOiJkZWZhdWx0VXNlciIsIlBhc3N3b3JkIjoiZGVmYXVsdFBhc3N3b3JkIn0=
+-----------------------------------------------------------------------
+config\env.js
+    import { config } from "dotenv";
+
+    config({ path: `.env.${process.env.NODE_ENV || "development"}.local` });
+
+    export const {
+    PORT,
+    NODE_ENV,
+    DB_URI,
+    JWT_SECRET,
+    JWT_EXPIRES_IN,
+    ARCJET_KEY,
+    ARCJET_ENV,
+    QSTASH_URL,
+    QSTASH_TOKEN,
+    QSTASH_CURRENT_SIGNING_KEY,
+    QSTASH_NEXT_SIGNING_KEY,
+    } = process.env;
+```
+
+#### dayjs
+
+- `npm i dayjs`
+
+```
+controllers\workflow.controller.js
+    import Subscription from "../models/subscription.model.js";
+    import dayjs from "dayjs";
+    import sendReminderEmail from "../utils/send-email.js";
+
+    const require = createRequire(import.meta.url);
+    const { serve } = require("@upstash/workflow/express");
+    import { createRequire } from "module";
+
+    const REMINDERS = [7, 5, 2, 1];
+
+    export const sendReminders = serve(async (context) => {
+    const { subscriptionId } = context.requestPayload;
+    const subscription = await fetchSubscription(context, subscriptionId);
+
+    if (!subscription || subscription.status !== "active") return;
+
+    const renewalDate = dayjs(subscription.renewalDate);
+
+    if (renewalDate.isBefore(dayjs())) {
+        console.log(
+        `Renewal date has passed for subscription ${subscriptionId}. Stopping workflow.`
+        );
+        return;
+    }
+
+    for (const daysBefore of REMINDERS) {
+        const reminderDate = renewalDate.subtract(daysBefore, "day");
+        if (reminderDate.isAfter(dayjs())) {
+        await sleepUntilReminder(
+            context,
+            `Reminder ${daysBefore} days before`,
+            reminderDate
+        );
+        }
+
+        if (dayjs().isSame(reminderDate, "day")) {
+        await triggerReminder(
+            context,
+            `${daysBefore} days before reminder`,
+            subscription
+        );
+        }
+    }
+    });
+
+    const fetchSubscription = async (context, subscriptionId) => {
+    return await context.run("get subscription", async () => {
+        return Subscription.findById(subscriptionId).populate("user", "name email");
+    });
+    };
+
+    const sleepUntilReminder = async (context, label, date) => {
+    console.log(`Sleeping until ${label} reminder at ${date}`);
+    await context.sleepUntil(label, date.toDate());
+    };
+
+    const triggerReminder = async (context, label, subscription) => {
+    return await context.run(label, async () => {
+        console.log(`Triggering ${label} reminder`);
+
+        // await sendReminderEmail({
+        //   to: subscription.user.email,
+        //   type: label,
+        //   subscription,
+        // });
+    });
+    };
+-----------------------------------------------------------------------
+controllers\subscription.controller.js
+    import Subscription from "../models/subscription.model.js";
+    import { workflowClient } from "../config/upstash.js";
+    import { SERVER_URL } from "../config/env.js";
+
+    export const createSubscription = async (req, res, next) => {
+    try {
+        const subscription = await Subscription.create({
+        ...req.body,
+        user: req.user._id,
+        });
+
+        // Workflow
+        const { workflowRunId } = await workflowClient.trigger({
+        url: `${SERVER_URL}/api/v1/workflows/subscription/reminder`,
+        body: {
+            subscriptionId: subscription.id,
+        },
+        headers: {
+            "content-type": "application/json",
+        },
+        retries: 0,
+        });
+
+        res
+        .status(201)
+        .json({ success: true, data: { subscription, workflowRunId } });
+    } catch (error) {
+        next(error);
+    }
+    };
+
+    export const getUserSubscription = async (req, res, next) => {
+    try {
+        if (req.user.id !== req.params.id) {
+        const error = new Error("You're not the owner of this account");
+        error.status = 401;
+        throw error;
+        }
+
+        const subscription = await Subscription.find({ user: req.params.id });
+
+        res.status(201).json({ success: true, data: subscription });
+    } catch (error) {
+        next(error);
+    }
+    };
+-----------------------------------------------------------------------
+routes\workflow.routes.js
+    import { Router } from "express";
+    import { sendReminders } from "../controllers/workflow.controller.js";
+
+    const workflowRouter = Router()
+
+    workflowRouter.post('/subscription/reminder', sendReminders);
+
+    export default workflowRouter
+-----------------------------------------------------------------------
+app.js
+    import express from "express";
+    import cookieParser from "cookie-parser";
+    import { PORT } from "./config/env.js";
+    import authRouter from "./routes/auth.routes.js";
+    import userRouter from "./routes/user.routes.js";
+    import subscriptionRouter from "./routes/subscription.routes.js";
+    import connectToDatabase from "./database/mongodb.js";
+    import errorMiddleware from "./middleware/error.middleware.js";
+    import workflowRouter from "./routes/workflow.routes.js";
+    // import arcjetMiddleware from "./middleware/arcjet.middleware.js";
+
+    const app = express();
+
+    // Built-in Middleware
+    app.use(express.json());
+    app.use(express.urlencoded({ extended: false }));
+    app.use(cookieParser());
+    // Arcjet Middleware
+    // app.use(arcjetMiddleware);
+
+    app.get("/", (req, res) => {
+    res.send("Welcome To The Subscription Tracker API");
+    });
+
+    // Routes
+    app.use("/api/v1/auth", authRouter);
+    app.use("/api/v1/users", userRouter);
+    app.use("/api/v1/subscriptions", subscriptionRouter);
+    app.use("/api/va/workflow", workflowRouter)
+
+    // Error Handller Middleware
+    app.use(errorMiddleware);
+
+    app.listen(PORT, async () => {
+    console.log(
+        `The Subscription Tracker API running on http://localhost:${PORT}`
+    );
+
+    await connectToDatabase();
+    });
+
+    export default app;
 ```
 
 <!-- -------------------------------------------------------------- -->
